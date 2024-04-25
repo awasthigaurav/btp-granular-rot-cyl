@@ -1,0 +1,41 @@
+units cgs	
+atom_style sphere
+variable R file R
+variable Ly equal 1.0
+variable th equal 25*PI/180
+variable gx equal sin(${th})
+variable gz equal -cos(${th})
+variable om equal 10*2*PI/60
+variable ux atom ${om}*z
+variable uz atom -${om}*x
+
+boundary f p f
+region box block -$R $R 0 ${Ly} -$R $R
+create_box 2 box
+comm_modify vel yes
+read_data cyl.data add append
+read_data pos.data add append
+group cw type 1
+group mb type 2
+neigh_modify exclude group cw cw
+velocity cw set v_ux 0 v_uz
+
+pair_style gran/hooke/history 2568000.0 NULL 4952.0 0.0 0.5 0
+pair_coeff * *
+
+timestep 1e-5
+
+fix 1 mb nve/sphere
+fix 2 cw rigid single torque * off off off force * off off off
+fix 3 mb gravity 981 vector ${gx} 0 ${gz}
+fix 4 all wall/reflect xlo EDGE xhi EDGE zlo EDGE zhi EDGE
+
+dump 1 all custom 1000 rc.dump id radius x y z vx vy vz
+thermo 1000
+thermo_style custom step atoms ke
+
+run_style verlet
+run 400000
+
+write_restart rsrc.inp
+

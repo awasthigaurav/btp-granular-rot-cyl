@@ -1,0 +1,4 @@
+gcc shp.c -o shp -lm
+./shp
+mpirun -np 4 lmp -in 0rc
+mpirun -np 4 lmp -in 1rc
